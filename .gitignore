@@ -1,4 +1,9 @@
+# files
 *.DS_store
+*.err
+*.out
+
+# direcotires
 /workflow
 /profiles
 /config
