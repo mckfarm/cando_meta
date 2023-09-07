@@ -14,11 +14,11 @@
 cd /projects/b1052/mckenna/cando_meta/results/clean_reads
 
 
-gunzip -k CAN_1_R1.fastq.gz
-gunzip -k CAN_1_R2.fastq.gz
+gunzip -c CAN_1_R1.fastq.gz > CAN_1_R1.fastq
+gunzip -c CAN_1_R2.fastq.gz > CAN_1_R2.fastq
 
-# gunzip -k CAN_2_R1.fastq.gz
-# gunzip -k CAN_2_R2.fastq.gz
+gunzip -c CAN_2_R1.fastq.gz > CAN_2_R1.fastq
+gunzip -c CAN_2_R2.fastq.gz > CAN_2_R2.fastq
 
-gunzip -k CAN_3_R1.fastq.gz
-gunzip -k CAN_3_R2.fastq.gz
+gunzip -c CAN_3_R1.fastq.gz > CAN_3_R1.fastq
+gunzip -c CAN_3_R2.fastq.gz > CAN_3_R2.fastq
