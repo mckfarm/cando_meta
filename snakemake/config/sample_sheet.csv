@@ -1,0 +1,7 @@
+sample_name,forward,reverse
+CAN_1,/projects/b1052/mckenna/cando_meta/raw_reads/CAN_1_S8_R1_001.fastq.gz,/projects/b1052/mckenna/cando_meta/raw_reads/CAN_1_S8_R2_001.fastq.gz
+CAN_2,/projects/b1052/mckenna/cando_meta/raw_reads/CAN_2_S9_R1_001.fastq.gz,/projects/b1052/mckenna/cando_meta/raw_reads/CAN_2_S9_R2_001.fastq.gz
+CAN_3,/projects/b1052/mckenna/cando_meta/raw_reads/CAN_3_S10_R1_001.fastq.gz,/projects/b1052/mckenna/cando_meta/raw_reads/CAN_3_S10_R2_001.fastq.gz
+CAN1,/projects/b1052/mckenna/cando_meta/raw_reads/CAN1_S295_R1_001.fastq.gz,/projects/b1052/mckenna/cando_meta/raw_reads/CAN1_S295_R2_001.fastq.gz
+CAN2,/projects/b1052/mckenna/cando_meta/raw_reads/CAN2_S296_R1_001.fastq.gz,/projects/b1052/mckenna/cando_meta/raw_reads/CAN2_S296_R2_001.fastq.gz
+CAN3,/projects/b1052/mckenna/cando_meta/raw_reads/CAN3_S297_R1_001.fastq.gz,/projects/b1052/mckenna/cando_meta/raw_reads/CAN3_S297_R2_001.fastq.gz

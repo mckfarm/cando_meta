@@ -1,0 +1,33 @@
+executor: cluster-generic
+cluster-generic-submit-cmd:
+  "mkdir -p logs/{rule} &&
+  sbatch
+    --account={resources.account}
+    --partition={resources.partition}
+    --nodes={resources.nodes}
+    --ntasks={threads}
+    --mem={resources.mem}
+    --time={resources.time}
+    --job-name={rule}-{wildcards}
+    --output=logs/{rule}/smk-{rule}-{wildcards}-{jobid}.out"
+default-resources:
+  - account="b1042"
+  - partition="genomicsguest"
+  - nodes=1
+  - threads=1
+  - mem="1gb"
+  - time="01:00:00"
+jobs: 15
+restart-times: 0
+max-jobs-per-second: 15
+max-status-checks-per-second: 1
+local-cores: 5
+latency-wait: 60
+keep-going: True
+rerun-incomplete: True
+rerun-triggers: mtime
+keep-incomplete: True
+printshellcmds: True
+scheduler: greedy
+software-deployment-method: conda
+conda-prefix: /projects/b1052/mckenna/snakemake_envs/
