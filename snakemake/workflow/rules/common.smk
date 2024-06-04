@@ -15,6 +15,11 @@ def get_rules(wildcards):
         all_rules = all_rules + expand(
             "results/fastp_out/{sample}/{sample}.fastp.r2.fastq.gz", sample=sample_sheet["sample_name"])
 
+    if config["readanalysis"]:
+        all_rules = all_rules + expand(
+            "results/kraken/{sample}/{sample}_kraken.txt", sample=sample_sheet["sample_name"])
+
+
     if config["assembly"]:
         all_rules = all_rules + directory(expand(
             "results/megahit/{sample}/final.contigs.fa", sample=sample_sheet["sample_name"]))

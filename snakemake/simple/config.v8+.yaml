@@ -30,4 +30,4 @@ keep-incomplete: True
 printshellcmds: True
 scheduler: greedy
 software-deployment-method: conda
-conda-prefix: /projects/b1052/mckenna/snakemake_envs/
+conda-prefix: /projects/b1052/mckenna/envs/snakemake

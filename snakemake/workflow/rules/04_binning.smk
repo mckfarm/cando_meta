@@ -20,7 +20,7 @@ rule metabat_depth:
 rule metabat_bin:
     input: 
         contigs = "results/megahit/{sample}/final.contigs.fa",
-        depth = "results/megahit_coverage/{sample}/{sample}.depth.txt"
+        depth = "results/coverage/{sample}/{sample}.depth.txt"
     output:
         directory("results/metabat/{sample}")
     params:
@@ -37,6 +37,27 @@ rule metabat_bin:
         --inFile {input.contigs} --outFile {params} --abdFile {input.depth} \
         --unbinned --verbose
         """
+
+rule gtdbtk:
+    input:
+        "results/metabat/{sample}"
+    output:
+        directory("results/gtdbtk/{sample}")
+    params:
+        "results/gtdbtk/{sample}/mash_db"
+    conda: 
+        "../envs/gtdbtk.yaml"
+    threads: 8
+    resources:
+        mem="100G",
+        time="24:00:00"
+    shell:
+        """
+        gtdbtk classify_wf --genome_dir {input} --out_dir {output} \
+        --mash_db {params} --extension fa \
+        --pplacer_cpus {threads} --cpus {threads}
+        """
+
 
 rule checkm_metabat:
     input:
@@ -74,42 +95,21 @@ def get_filtered_bins(wildcards):
     bin = glob_wildcards(os.path.join(checkpoint_output, "{bin}.fa")).bin
     return expand(f"{checkpoint_output}/{{bin}}.fa", bin=bin)
 
-rule gtdbtk:
+rule prokka:
     input:
-        "results/metabat/{sample}"
+        get_filtered_bins
     output:
-        directory("results/gtdbtk/{sample}")
-    params:
-        "results/gtdbtk/{sample}/mash_db"
+        "results/prokka/{sample}/{bin}/{bin}.tsv"
+    params:  
+        outdir = "results/prokka/{sample}/{bin}",
+        prefix = "{bin}"
     conda: 
-        "../envs/gtdbtk.yaml"
-    threads: 6
+        "../envs/prokka.yaml"
+    threads: 4
     resources:
-        mem="100G",
-        time="24:00:00"
+        mem="30G",
+        time="05:00:00"
     shell:
         """
-        gtdbtk classify_wf --genome_dir {input} --out_dir {output} \
-        --mash_db {params} --extension fa \
-        --pplacer_cpus {threads} --cpus {threads}
+        prokka {input} --outdir {params.outdir} --prefix {params.prefix} --metagenome --force --cpus {threads}
         """
-
-# rule prokka:
-#     input:
-#         get_filtered_bins
-#     output:
-#         "results/prokka/{sample}/{bin}/{bin}.tsv"
-#     params:  
-#         outdir = "results/prokka/{sample}/{bin}",
-#         prefix = "{bin}"
-#     conda: 
-#         "../envs/prokka.yaml"
-#     threads: 4
-#     resources:
-#         mem="30G",
-#         time="05:00:00"
-#     shell:
-#         """
-#         prokka {input} --outdir {params.outdir} --prefix {params.prefix} --metagenome --force --cpus {threads}
-#         """
-
