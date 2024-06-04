@@ -16,9 +16,9 @@ rule megahit_coassembly:
         r1_concat = "results/fastp_out/concat.r1.fastp.fastq.gz",
         r2_concat = "results/fastp_out/concat.r2.fastp.fastq.gz"
     output:
-        "results/megahit/final.contigs.fa"
+        "results/megahit_coassembly/final.contigs.fa"
     params: 
-        out_dir = "results/megahit/"
+        out_dir = "results/megahit_coassembly/"
     conda: "../envs/megahit.yaml"
     threads: 20
     resources:
@@ -38,13 +38,13 @@ rule megahit_coassembly:
 
         """
 
-rule quast:
+rule quast_coassembly:
     input:
-        "results/megahit/final.contigs.fa"
+        "results/megahit_coassembly/final.contigs.fa"
     output:
-        "results/megahit_quast/report.html"
+        "results/quast_coassembly/final.contigs.fa"
     params:
-        out_dir = "results/megahit_quast/"
+        out_dir = "results/quast_coassembly/"
     threads: 2
     resources:
         mem="5G",
@@ -56,14 +56,13 @@ rule quast:
         quast.py -o {params.out_dir} --threads {threads} -L {input}
         """
 
-
-rule index_contigs:
+rule index_contigs_coassembly:
     input:
-        "results/megahit/final.contigs.fa"
+         "results/megahit_coassembly/final.contigs.fa"
     output:
-        "results/megahit_coverage/coassembly.1.bt2"
+        "results/coverage_coassembly/coassembly.1.bt2"
     params:
-        index_name = "results/megahit_coverage/coassembly"
+        index_name = "results/coverage_coassembly/coassembly"
     threads: 10
     resources:
         mem="40G",
@@ -76,17 +75,17 @@ rule index_contigs:
         bowtie2-build {input} {params.index_name}
         """
 
-rule map_contigs:
+rule map_contigs_coassembly:
     input:
         r1_clean = get_trimmed_r1,
         r2_clean = get_trimmed_r2,
-        index = "results/megahit_coverage/coassembly.1.bt2"
+        index = "results/coverage_coassembly/coassembly.1.bt2"
     output:
-        sorted_bam = "results/megahit_coverage/{sample}/{sample}.sorted.bam",
-        flagstat = "results/megahit_coverage/{sample}/{sample}.flagstat.tsv",
-        bam_index = "results/megahit_coverage/{sample}/{sample}.sorted.bam.bai"
+        sorted_bam = "results/coverage_coassembly/{sample}/{sample}.sorted.bam",
+        flagstat = "results/coverage_coassembly/{sample}/{sample}.flagstat.tsv",
+        bam_index = "results/coverage_coassembly/{sample}/{sample}.sorted.bam.bai"
     params:
-        index_name = "results/megahit_coverage/coassembly"
+        index_name = "results/coverage_coassembly/{sample}"
     threads: 10
     resources:
         mem="40G",

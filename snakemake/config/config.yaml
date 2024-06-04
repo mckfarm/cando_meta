@@ -6,5 +6,6 @@ sample_sheet: "config/sample_sheet.csv"
 readqc: TRUE
 readanalysis: TRUE
 assembly: TRUE
-coassembly: FALSE
+coassembly: TRUE
 binning: TRUE
+binning_coassembly: TRUE

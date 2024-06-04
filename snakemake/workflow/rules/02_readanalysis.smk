@@ -7,11 +7,12 @@ rule kraken:
         "results/kraken/{sample}/{sample}_kraken.txt"
     threads: 10
     resources:
-        mem="60G"
+        mem="100g",
+        time="00:20:00"
     shell: 
         """
         module load kraken/2
 
         kraken2 --db /projects/b1052/mckenna/resources/kraken2_db --threads {threads} \
-        --paired --gzip-compressed {input.r1} {input.r2} --output {output}
+        --paired --gzip-compressed {input.r1} {input.r2} --report {output}
         """
