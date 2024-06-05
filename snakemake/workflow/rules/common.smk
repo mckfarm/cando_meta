@@ -32,10 +32,10 @@ def get_rules(wildcards):
         
     if config["coassembly"]:
         all_rules = all_rules + directory(expand(
-            "results/megahit_coassembly/{sample}/final.contigs.fa", sample=sample_sheet["sample_name"]))
+            "results/megahit_coassembly/final.contigs.fa", sample=sample_sheet["sample_name"]))
 
         all_rules = all_rules + directory(expand(
-            "results/quast_coassembly/{sample}/report.html", sample=sample_sheet["sample_name"]))
+            "results/quast_coassembly/report.html", sample=sample_sheet["sample_name"]))
 
         all_rules = all_rules + expand(
             "results/coverage_coassembly/{sample}/{sample}.sorted.bam", sample=sample_sheet["sample_name"])

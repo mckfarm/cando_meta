@@ -42,7 +42,7 @@ rule quast_coassembly:
     input:
         "results/megahit_coassembly/final.contigs.fa"
     output:
-        "results/quast_coassembly/final.contigs.fa"
+        "results/quast_coassembly/report.html"
     params:
         out_dir = "results/quast_coassembly/"
     threads: 2

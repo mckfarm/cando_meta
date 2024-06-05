@@ -12,8 +12,9 @@ include: "rules/common.smk"
 include: "rules/01_readqc.smk"
 include: "rules/02_readanalysis.smk"
 include: "rules/03A_assembly.smk"
-# include: "rules/03B_coassembly.smk"
+include: "rules/03B_coassembly.smk"
 include: "rules/04_binning.smk"
+include: "rules/04B_binning.smk"
 
 rule all:
     input:
