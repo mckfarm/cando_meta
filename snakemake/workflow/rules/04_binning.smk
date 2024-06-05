@@ -90,14 +90,9 @@ checkpoint bin_filter:
     script:
         "../scripts/checkm_filter.py"
 
-def get_filtered_bins(wildcards):
-    checkpoint_output = checkpoints.bin_filter.get(**wildcards).output[0]
-    bin = glob_wildcards(os.path.join(checkpoint_output, "{bin}.fa")).bin
-    return expand(f"{checkpoint_output}/{{bin}}.fa", bin=bin)
-
 rule prokka:
     input:
-        get_filtered_bins
+        "results/metabat_filt/{sample}/{bin}.fa"
     output:
         "results/prokka/{sample}/{bin}/{bin}.tsv"
     params:  
@@ -108,8 +103,22 @@ rule prokka:
     threads: 4
     resources:
         mem="30G",
-        time="05:00:00"
+        time="01:00:00"
     shell:
         """
         prokka {input} --outdir {params.outdir} --prefix {params.prefix} --metagenome --force --cpus {threads}
+        """
+
+def get_prokka_output(wildcards):
+    checkpoint_output = checkpoints.bin_filter.get(**wildcards).output[0]
+    return expand("results/prokka/{sample}/{bin}/{bin}.tsv", sample = wildcards.sample, bin = glob_wildcards(os.path.join(checkpoint_output, "{bin}.fa")).bin)
+
+rule aggregate_prokka:
+    input:
+        get_prokka_output
+    output:
+        "results/prokka/{sample}/aggregate.txt"
+    shell:
+        """
+        cat {input} > {output}
         """

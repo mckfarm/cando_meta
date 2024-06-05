@@ -19,23 +19,22 @@ def get_rules(wildcards):
         all_rules = all_rules + expand(
             "results/kraken/{sample}/{sample}_kraken.txt", sample=sample_sheet["sample_name"])
 
-
     if config["assembly"]:
-        all_rules = all_rules + directory(expand(
-            "results/megahit/{sample}/final.contigs.fa", sample=sample_sheet["sample_name"]))
+        all_rules = all_rules + expand(
+            "results/megahit/{sample}/final.contigs.fa", sample=sample_sheet["sample_name"])
 
-        all_rules = all_rules + directory(expand(
-            "results/quast/{sample}/report.html", sample=sample_sheet["sample_name"]))
+        all_rules = all_rules + expand(
+            "results/quast/{sample}/report.html", sample=sample_sheet["sample_name"])
 
         all_rules = all_rules + expand(
             "results/coverage/{sample}/{sample}.sorted.bam", sample=sample_sheet["sample_name"])
         
     if config["coassembly"]:
-        all_rules = all_rules + directory(expand(
-            "results/megahit_coassembly/final.contigs.fa", sample=sample_sheet["sample_name"]))
+        all_rules = all_rules + expand(
+            "results/megahit_coassembly/final.contigs.fa", sample=sample_sheet["sample_name"])
 
-        all_rules = all_rules + directory(expand(
-            "results/quast_coassembly/report.html", sample=sample_sheet["sample_name"]))
+        all_rules = all_rules + expand(
+            "results/quast_coassembly/report.html", sample=sample_sheet["sample_name"])
 
         all_rules = all_rules + expand(
             "results/coverage_coassembly/{sample}/{sample}.sorted.bam", sample=sample_sheet["sample_name"])
@@ -53,7 +52,13 @@ def get_rules(wildcards):
         all_rules = all_rules + directory(expand(
             "results/gtdbtk/{sample}/", sample=sample_sheet["sample_name"]))
 
+        all_rules = all_rules + expand(
+            "results/prokka/{sample}/aggregate.txt", sample=sample_sheet["sample_name"])
+
     if config["binning_coassembly"]:
+        all_rules = all_rules + directory(expand(
+            "results/metabat_coassembly/{sample}/", sample=sample_sheet["sample_name"]))
+
         all_rules = all_rules + expand(
             "results/metabat_checkm_coassembly/{sample}/{sample}_checkm_output.txt", sample=sample_sheet["sample_name"])
         
@@ -62,6 +67,9 @@ def get_rules(wildcards):
             
         all_rules = all_rules + directory(expand(
             "results/gtdbtk_coassembly/{sample}/", sample=sample_sheet["sample_name"]))
+
+        all_rules = all_rules + expand(
+            "results/prokka_coassembly/{sample}/aggregate.txt", sample=sample_sheet["sample_name"])
 
     return all_rules
 
