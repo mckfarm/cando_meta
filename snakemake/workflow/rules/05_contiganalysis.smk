@@ -30,7 +30,7 @@ rule diamond_denit:
     shell:
         """
         diamond blastp -d {params.db_loc} -q {input} -o {output} \
-        --very-sensitive --iterate --verbose --threads {threads} 
+        --very-sensitive --iterate --verbose --threads {threads} --max-target-seqs 1
         """
 
 
