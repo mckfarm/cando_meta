@@ -3,10 +3,10 @@ sample_sheet: "config/sample_sheet.csv"
 
 
 ### modules ###
-readqc: TRUE
-readanalysis: TRUE
-assembly: TRUE
+readqc: FALSE
+readanalysis: FALSE
+assembly: FALSE
 coassembly: TRUE
-binning: TRUE
-binning_coassembly: FALSE
+binning: FALSE
+binning_coassembly: TRUE
 contiganalysis: TRUE

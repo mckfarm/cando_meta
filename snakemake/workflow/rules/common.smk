@@ -79,7 +79,7 @@ def get_rules(wildcards):
             "results/pyrodigal/{sample}/cds.gff", sample=sample_sheet["sample_name"])
 
         all_rules = all_rules + expand(
-            "results/diamond_contigs/{sample}/uniref100_denit.tsv", sample=sample_sheet["sample_name"])
+            "results/diamond_contigs/{sample}/uniref90_denit.tsv", sample=sample_sheet["sample_name"])
 
         all_rules = all_rules + expand(
             "results/pileup/{sample}/{sample}.pileup.txt", sample=sample_sheet["sample_name"])
