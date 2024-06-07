@@ -8,4 +8,5 @@ readanalysis: TRUE
 assembly: TRUE
 coassembly: TRUE
 binning: TRUE
-binning_coassembly: TRUE
+binning_coassembly: FALSE
+contiganalysis: TRUE

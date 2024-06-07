@@ -17,7 +17,7 @@ default-resources:
   - threads=1
   - mem="1gb"
   - time="01:00:00"
-jobs: 15
+jobs: 30
 restart-times: 0
 max-jobs-per-second: 15
 max-status-checks-per-second: 1

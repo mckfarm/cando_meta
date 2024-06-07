@@ -15,6 +15,7 @@ include: "rules/03A_assembly.smk"
 include: "rules/03B_coassembly.smk"
 include: "rules/04_binning.smk"
 include: "rules/04B_binning.smk"
+include: "rules/05_contiganalysis.smk"
 
 rule all:
     input:

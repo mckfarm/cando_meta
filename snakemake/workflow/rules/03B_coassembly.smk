@@ -22,7 +22,7 @@ rule megahit_coassembly:
     conda: "../envs/megahit.yaml"
     threads: 20
     resources:
-        mem="150g",
+        mem="200g",
         account="b1042",
         partition="genomics-himem",
         time="24:00:00"
@@ -85,7 +85,7 @@ rule map_contigs_coassembly:
         flagstat = "results/coverage_coassembly/{sample}/{sample}.flagstat.tsv",
         bam_index = "results/coverage_coassembly/{sample}/{sample}.sorted.bam.bai"
     params:
-        index_name = "results/coverage_coassembly/{sample}"
+        index_name = "results/coverage_coassembly/coassembly"
     threads: 10
     resources:
         mem="40G",
