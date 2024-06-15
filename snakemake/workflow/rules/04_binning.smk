@@ -7,9 +7,9 @@ rule metabat_depth:
     conda:
         "../envs/metabat.yaml"
     resources:
-        mem="20g",
-        time="10:00:00",
-    threads: 4
+        mem="50g",
+        time="07:00:00",
+    threads: 6
     shell:
         """
         jgi_summarize_bam_contig_depths \
@@ -28,8 +28,8 @@ rule metabat_bin:
     conda:
         "../envs/metabat.yaml"
     resources:
-        mem="20g",
-        time="05:00:00"
+        mem="30g",
+        time="04:00:00"
     threads: 1
     shell:
         """
@@ -49,8 +49,8 @@ rule gtdbtk:
         "../envs/gtdbtk.yaml"
     threads: 8
     resources:
-        mem="100G",
-        time="24:00:00"
+        mem="150G",
+        time="12:00:00"
     shell:
         """
         gtdbtk classify_wf --genome_dir {input} --out_dir {output} \

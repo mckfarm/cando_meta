@@ -86,9 +86,9 @@ rule map_contigs_coassembly:
         bam_index = "results/coverage_coassembly/{sample}/{sample}.sorted.bam.bai"
     params:
         index_name = "results/coverage_coassembly/coassembly"
-    threads: 10
+    threads: 12
     resources:
-        mem="40G",
+        mem="80G",
         time="10:00:00"
     shell:
         """
