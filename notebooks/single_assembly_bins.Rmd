@@ -1,0 +1,218 @@
+```{r}
+library(tidyverse)
+library(patchwork)
+
+
+metagenome_days <- data.frame(sample = c("CAN1", "CAN2", "CAN_1", "CAN_2", "CAN_3", "CAN3"),
+                              day = c(451, 521, 549, 612, 671, 728))
+```
+
+read in checkm
+```{r}
+get_filenames <- function(path_to_folder, samples, suffix){
+  name <- paste0(path_to_folder, samples, "/", samples, suffix)
+  return(name)
+}
+
+checkm_files <- lapply(metagenome_days$sample, get_filenames, 
+                      path_to_folder = "./results/metabat_checkm/", suffix = "_checkm_output.txt")
+  
+  
+checkm_all <- lapply(checkm_files, read_delim, show_col_types = FALSE)
+names(checkm_all) <- metagenome_days$sample
+
+
+filter_checkm <- function(checkm_df){
+  df <- checkm_df %>%
+    filter(Completeness >= 50 & Contamination <= 5)
+  return(df)
+}
+
+checkm_filt <- lapply(checkm_all, filter_checkm)
+checkm_filt_df <- bind_rows(checkm_filt)
+
+rm(checkm_files, checkm_filt, checkm_all, filter_checkm)
+
+```
+
+GTDB
+```{r}
+gtdb_read <- function(samples){
+  file_name <- paste0("./results/gtdbtk/", samples, "/classify/gtdbtk.bac120.summary.tsv")
+  gtdb_all <- read_delim(file_name, show_col_types = FALSE)
+  return(gtdb_all)
+}
+
+gtdb_filter <- function(gtdb_df){
+  gtdb_filt <- gtdb_df %>%
+    filter(user_genome %in% checkm_filt_df$`Bin Id`)
+  return(gtdb_filt)
+}
+
+
+gtdb_all <- lapply(metagenome_days$sample, gtdb_read)
+names(gtdb_all) <- metagenome_days$sample
+gtdb_all_df <- bind_rows(gtdb_all, .id = "sample")
+
+gtdb_filt_df <- gtdb_filter(gtdb_all_df)
+
+gtdb_filt_check <- gtdb_filt_df %>%
+  left_join(checkm_filt_df, by = c("user_genome" = "Bin Id"))
+write_csv(gtdb_filt_check, file = "./notebooks/data_files/single_bin_summary.csv")
+
+rm(gtdb_all, gtdb_all_df, gtdb_read, gtdb_filter, gtdb_filt_df, checkm_filt_df)
+
+```
+
+
+read in genomes
+```{r}
+get_genome_anns <- function(bin){
+  df <- read_delim(bin, show_col_types = FALSE)
+  return(df)
+}
+
+filtered_genomes <- gtdb_filt_check %>%
+  filter(str_detect(classification,
+                    "(?i)accumulibacter|competibacter|thauera|zoogloea|defluviicoccus|phosphoribacter|flavobacterium|azonexus|micropruina"))
+
+ann_list <- paste0("./results/prokka/",
+                    filtered_genomes$sample, "/", filtered_genomes$user_genome, "/", filtered_genomes$user_genome, ".tsv")
+
+# ann_list <- paste0("./results/prokka/",
+#                     gtdb_filt_check$sample, "/", gtdb_filt_check$user_genome, "/", gtdb_filt_check$user_genome, ".tsv")
+
+ann_all <- lapply(ann_list, get_genome_anns)
+
+names(ann_all) <- filtered_genomes$user_genome
+
+# names(ann_all) <- gtdb_filt_check$user_genome
+
+rm(get_genome_anns, ann_list)
+
+```
+
+```{r}
+
+ann_table_master <- ann_all %>%
+  bind_rows(.id = "user_genome") %>%
+  filter(product != "hypothetical protein") %>%
+  filter(ftype == "CDS") %>%
+  filter(!str_detect(product, "putative")) %>%
+  filter(!is.na(gene)) %>%
+  select(-c(locus_tag, length_bp, ftype)) %>% 
+  add_column(present = 1) %>%
+  mutate(gene_clean = str_replace(gene, "_[1-9]", ""))
+
+
+ann_table_summary <- ann_table_master %>%
+  group_by(user_genome, gene_clean) %>%
+  summarise(copy_num = sum(present)) %>%
+  pivot_wider(names_from = user_genome, values_from = copy_num) %>%
+  pivot_longer(cols = !gene_clean, names_to = "user_genome", values_to = "copy_num") %>%
+  mutate(copy_num = case_when(copy_num > 0 ~ copy_num,
+                             is.na(copy_num) ~ 0,
+                             copy_num == 0 ~ 0)) %>%
+  mutate(present = ifelse(copy_num == 0, 0, 1)) %>%
+  # left_join(gtdb_filt_check %>% select(user_genome, classification)) %>%
+  left_join(filtered_genomes %>% select(user_genome, classification)) %>%
+  mutate(classification = gsub("[A-z]__", "", classification)) %>%
+  separate_wider_delim(classification, delim = ";", names = c("kingdom", "phylum", "class", "order", "family", "genus", "species")) %>%
+  select(-c(kingdom, phylum, order)) %>%
+  mutate(sample = case_when(str_detect(user_genome, "CAN1") ~ 451,
+                            str_detect(user_genome, "CAN2") ~ 521,
+                            str_detect(user_genome, "CAN_1") ~ 549,
+                            str_detect(user_genome, "CAN_2") ~ 612,
+                            str_detect(user_genome, "CAN_3") ~ 671,
+                            str_detect(user_genome, "CAN3") ~ 728)) 
+
+rm(ann_all)
+
+```
+
+
+
+
+```{r}
+
+filter_out_denit <- ann_table_summary %>%
+  filter(gene_clean %in% c("nosZ", "nasD", "nasE", "nirS", "nirK", "nirB", "nirC", "norB", "norC")) %>%
+  group_by(user_genome) %>%
+  summarise(sum = sum(present)) %>%
+  filter(sum > 0)
+
+
+ann_table_summary %>%
+  filter(user_genome %in% filter_out_denit$user_genome) %>%
+  filter(gene_clean %in% c("nosZ", "nasD", "nasE", "nirS", "nirK", "nirB", "nirC", "norB", "norC")) %>%   
+  arrange(gene_clean) %>%
+  mutate(gene_clean = fct_inorder(factor(gene_clean, ordered=TRUE))) %>%
+  mutate(genome_name = paste0(family, "; " , genus," (", user_genome, ")")) %>%
+  mutate(present = as_factor(present)) %>%
+  ggplot(., aes(x = gene_clean, y = genome_name, fill = present)) +
+  geom_tile() +
+  geom_text(aes(label = copy_num), size = 3) + 
+  scale_fill_manual(values = c("#F4F4F9", "#B8DBD9")) +
+  scale_y_discrete(limits = rev) + 
+  labs(x = "", y = "") + 
+  theme_bw() + 
+  theme(panel.grid = element_blank(), 
+        legend.position = "none")
+
+ggsave("./notebooks/all_mag_heatmap_paogao.png", width = 6.5, height = 3.5, units = "in", dpi = 320)
+
+```
+
+
+```{r}
+
+heatmap_671 <- 
+ann_table_summary %>%
+  filter(gene_clean %in% c("nosZ", "nasD", "nasE", "nirS", "nirK", "norB", "norC",
+                           "glk", "glgA", "glgB","glgC", "phaC")) %>%
+  mutate(func = case_when(str_detect(gene_clean, "nosZ|nasD|nasE|nirS|nirK|norB|norC") ~ "Denitrification",
+                          str_detect(gene_clean, "glk|glg|pha") ~ "Carbon storage")) %>%
+  arrange(func, desc(gene_clean)) %>%
+  mutate(gene_clean = fct_inorder(factor(gene_clean, ordered=TRUE))) %>%
+  mutate(genome_name = paste0(genus, " (", user_genome, ")")) %>%
+  mutate(present = as_factor(present)) %>%
+  filter(sample %in% c(671)) %>%
+  # mutate(sample = factor(sample, c("451", "521", "549", "612", "671", "728"))) %>%
+  ggplot(., aes(x = genome_name, y = gene_clean, fill = present)) +
+  facet_wrap(~sample, scales = "free_x") + 
+  geom_tile() +
+  geom_text(aes(label = copy_num)) + 
+  scale_fill_manual(values = c("#F4F4F9", "#B8DBD9")) +
+  labs(x = "", y = "") + 
+  theme_bw() + 
+  theme(panel.grid = element_blank(), 
+        axis.text.x = element_text(angle = 90,  hjust = 1),
+        legend.position = "none")
+
+heatmap_728 <- 
+ann_table_summary %>%
+  filter(gene_clean %in% c("nosZ", "nasD", "nasE", "nirS", "nirK", "norB", "norC",
+                           "glk", "glgA", "glgB","glgC", "phaC")) %>%
+  mutate(func = case_when(str_detect(gene_clean, "nosZ|nasD|nasE|nirS|nirK|norB|norC") ~ "Denitrification",
+                          str_detect(gene_clean, "glk|glg|pha") ~ "Carbon storage")) %>%
+  arrange(func, desc(gene_clean)) %>%
+  mutate(gene_clean = fct_inorder(factor(gene_clean, ordered=TRUE))) %>%
+  mutate(genome_name = paste0(genus, " (", user_genome, ")")) %>%
+  mutate(present = as_factor(present)) %>%
+  filter(sample %in% c(728)) %>%
+  # mutate(sample = factor(sample, c("451", "521", "549", "612", "671", "728"))) %>%
+  ggplot(., aes(x = genome_name, y = gene_clean, fill = present)) +
+  facet_wrap(~sample, scales = "free_x") + 
+  geom_tile() +
+  geom_text(aes(label = copy_num)) + 
+  scale_fill_manual(values = c("#F4F4F9", "#B8DBD9")) +
+  labs(x = "", y = "") + 
+  theme_bw() + 
+  theme(panel.grid = element_blank(), 
+        axis.text.x = element_text(angle = 90, hjust = 1),
+        legend.position = "none")
+
+heatmap_671 + heatmap_728 + plot_layout(widths = c(1, 0.6), axes = "collect")
+ggsave("./notebooks/mag_heatmap.png", width = 5, height = 6, units = "in", dpi = 320)
+
+```

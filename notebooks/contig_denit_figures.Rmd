@@ -1,0 +1,115 @@
+Packages
+
+```{r message=FALSE, warning=FALSE}
+library(tidyverse)
+library(readxl)
+```
+
+
+Sample data frame
+```{r}
+sample_dates <- data.frame(sample = c("CAN1", "CAN2", "CAN_1", "CAN_2", "CAN_3", "CAN3"),
+                           day = c(451, 521, 549, 612, 671, 728),
+                           phase = c("II", "IV", "IV", "IV", "IV", "IV"))
+```
+
+read in data
+```{r}
+onedrive_path <- file.path("~/OneDrive - Northwestern University/Project folders/CANDO metagenomics/")
+depth_pao_gao_clean <- read_xlsx(file.path(onedrive_path, "gene_ab_denit.xlsx"), sheet = "clean") %>%
+  filter(!is.na(protein_clean)) %>%
+  mutate(group = case_when(str_detect(protein_clean, "(?i)nitrate") ~ "Nitrate",
+                           str_detect(protein_clean, "(?i)nitrite") ~ "Nitrite",
+                           str_detect(protein_clean, "(?i)nitric oxide") ~ "Nitric oxide",
+                           str_detect(protein_clean, "(?i)nitrous oxide") ~ "Nitrous oxide")) %>%
+  mutate(group = factor(group, levels = c("Nitrate", "Nitrite", "Nitric oxide", "Nitrous oxide"))) %>%
+  pivot_longer(cols = sample_dates$sample, names_to = "sample", values_to = "sum_rpkm") %>%
+  filter(!str_detect(sum_rpkm, "NA")) %>%
+  mutate(sum_rpkm = as.numeric(sum_rpkm)) %>%
+  left_join(sample_dates, by = "sample") %>%
+  filter(group != "Nitrate") %>%
+  group_by(protein_clean, day, group, organism_clean) %>%
+  summarise(sum = sum(sum_rpkm))
+
+```
+
+
+
+
+```{r}
+
+depth_pao_gao_clean %>%
+  mutate(organism_clean = factor(organism_clean, levels = c("Accumulibacter", "Phosphoribacter", "Tetrasphaera",
+                                                            "Competibacter", "Contendobacter", "Defluviicoccus",
+                                                            "Dechloromonas", "Flavobacterium", "Thauera", "Zoogloea"))) %>%
+  filter(!organism_clean %in% c("Tetrasphaera", "Contendobacter", "Phosphoribacter", "Flavobacterium")) %>%
+  filter(protein_clean != "Nitric oxide dioxygenase - nod") %>%
+  mutate(day = factor(day, levels = c("451", "521", "549", "612", "671", "728"))) %>%
+  ggplot(., aes(x = day, y = sum, fill = organism_clean)) +
+    facet_grid(protein_clean ~ organism_clean) +
+    geom_bar(stat = "identity") + 
+    scale_fill_manual(values = c("#005CA3", "#255957", "#5f0f40", "#ff9b54", "#ff7f51", "#ce4257")) + 
+    scale_y_continuous(breaks = c(0, 125, 250)) + 
+    theme_bw() + 
+    theme(strip.text.x = element_text(face = "italic", size = 8),
+          axis.text = element_text(size = 6),
+          axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1),
+          # strip.text.y = element_blank(),
+          strip.text.y = element_text(angle = 0),
+          panel.grid.minor = element_blank(),
+          legend.position = "none") + 
+    labs(x = "Day", y = "Read abundance [RPKM]") 
+
+ggsave("./results/denit_gene_ab.png", width = 6, height = 3, units = "in", dpi = 320)
+
+
+```
+
+```{r}
+
+depth_pao_gao_clean %>%
+  mutate(organism_clean = factor(organism_clean, levels = c("Accumulibacter", "Phosphoribacter", "Tetrasphaera",
+                                                            "Competibacter", "Contendobacter", "Defluviicoccus",
+                                                            "Dechloromonas", "Flavobacterium", "Thauera", "Zoogloea"))) %>%
+  filter(!organism_clean %in% c("Tetrasphaera", "Contendobacter", "Phosphoribacter", "Flavobacterium")) %>%
+  filter(!day %in% c(451, 521, 728)) %>%
+  filter(protein_clean == "Nitrous oxide reductase - nosZ") %>%
+  mutate(day = factor(day, levels = c("549", "612", "671"))) %>%
+  ggplot(., aes(x = day, y = sum, fill = organism_clean)) +
+    facet_grid(~ organism_clean) +
+    geom_bar(stat = "identity") + 
+    scale_fill_manual(values = c("#005CA3", "#255957", "#ff9b54", "#ff7f51", "#ce4257")) + 
+    theme_bw() + 
+    theme(strip.text.x = element_blank(),
+          axis.text = element_text(size = 8),
+          axis.title = element_text(size = 9),
+          panel.grid.minor = element_blank(),
+          legend.position = "none") + 
+    labs(x = "Day", y = "Read abundance [RPKM]") 
+
+ggsave("./results/denit_nosZ_meta.png", width = 6.5, height = 1.8, units = "in", dpi = 320)
+```
+
+
+heatmap
+```{r}
+my_breaks <- c(0.3, 3, 30, 300)
+
+depth_pao_gao_clean %>%
+  mutate(organism_clean = factor(organism_clean, levels = c("Accumulibacter", "Phosphoribacter", "Tetrasphaera",
+                                                            "Competibacter", "Contendobacter", "Defluviicoccus",
+                                                            "Dechloromonas", "Flavobacterium", "Thauera", "Zoogloea"))) %>%
+  filter(!organism_clean %in% c("Tetrasphaera", "Contendobacter", "Phosphoribacter")) %>%
+  mutate(day = factor(day, levels = c("451", "521", "549", "612", "671", "728"))) %>%
+ggplot(., aes(x = day, y = protein_clean, fill = sum)) +
+  facet_grid(group ~ organism_clean, scales = "free") +
+  geom_tile() +
+  scale_fill_distiller(palette = "YlOrRd", direction = 1, name = "RPKM", trans = "log", breaks = my_breaks)  +
+  theme_classic() +
+  theme(strip.text.x = element_text(face = "italic"), 
+        axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1)) + 
+  labs(x = "", y = "")
+
+# ggsave("./results/denit_heatmap_draft.png", width = 12, height = 5, units = "in", dpi = 320)
+  
+```
