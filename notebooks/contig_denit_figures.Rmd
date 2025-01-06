@@ -15,7 +15,10 @@ sample_dates <- data.frame(sample = c("CAN1", "CAN2", "CAN_1", "CAN_2", "CAN_3",
 
 read in data
 ```{r}
-onedrive_path <- file.path("~/OneDrive - Northwestern University/Project folders/CANDO metagenomics/")
+# onedrive_path <- file.path("~/OneDrive - Northwestern University/Project folders/CANDO metagenomics/")
+
+onedrive_path <- file.path("~/GitHub/cando_meta/data/")
+
 depth_pao_gao_clean <- read_xlsx(file.path(onedrive_path, "gene_ab_denit.xlsx"), sheet = "clean") %>%
   filter(!is.na(protein_clean)) %>%
   mutate(group = case_when(str_detect(protein_clean, "(?i)nitrate") ~ "Nitrate",
@@ -88,6 +91,31 @@ depth_pao_gao_clean %>%
     labs(x = "Day", y = "Read abundance [RPKM]") 
 
 ggsave("./results/denit_nosZ_meta.png", width = 6.5, height = 1.8, units = "in", dpi = 320)
+```
+graphical abstract
+```{r}
+
+depth_pao_gao_clean %>%
+  mutate(organism_clean = factor(organism_clean, levels = c("Accumulibacter", "Phosphoribacter", "Tetrasphaera",
+                                                            "Competibacter", "Contendobacter", "Defluviicoccus",
+                                                            "Dechloromonas", "Flavobacterium", "Thauera", "Zoogloea"))) %>%
+  filter(organism_clean %in% c("Accumulibacter", "Competibacter", "Dechloromonas")) %>%
+  filter(!day %in% c(451, 521, 728)) %>%
+  filter(protein_clean == "Nitrous oxide reductase - nosZ") %>%
+  mutate(day = factor(day, levels = c("549", "612", "671"))) %>%
+  ggplot(., aes(x = day, y = sum, fill = organism_clean)) +
+    facet_grid(~ organism_clean) +
+    geom_bar(stat = "identity") + 
+    scale_fill_manual(values = c("#005CA3", "#255957", "#ff9b54", "#ff7f51", "#ce4257")) + 
+    theme_bw() + 
+  theme(strip.text = element_blank(),
+        legend.position = "none",
+        panel.grid = element_blank(),
+        axis.title = element_blank(),
+        axis.text = element_blank(),
+        axis.ticks = element_blank())
+
+ggsave("./results/denit_nosZ_graphical_abs.png", width = 3, height = 1.2, units = "in", dpi = 320)
 ```
 
 
